@@ -96,20 +96,16 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         mDeviceProvisioned = isDeviceProvisioned;
         if (mDialog == null) {
             mStatusBar = (StatusBarManager)mContext.getSystemService(Context.STATUS_BAR_SERVICE);
-            mDialog = createDialog();
+            initialize();
         }
+        mDialog = createDialog();
         prepareDialog();
 
         mStatusBar.disable(StatusBarManager.DISABLE_EXPAND);
         mDialog.show();
     }
 
-    /**
-     * Create the global actions dialog.
-     * @return A new dialog.
-     */
-    private AlertDialog createDialog() {
-
+    private void initialize() {
         mSilentModeToggle = new ToggleAction(
                 R.drawable.ic_lock_silent_mode,
                 R.drawable.ic_lock_silent_mode_off,
@@ -189,6 +185,13 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                 });
 
         mAdapter = new MyAdapter();
+    }
+
+    /**
+     * Create the global actions dialog.
+     * @return A new dialog.
+     */
+    private AlertDialog createDialog() {
 
         final AlertDialog.Builder ab = new AlertDialog.Builder(mContext);
 
