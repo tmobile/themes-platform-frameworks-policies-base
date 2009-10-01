@@ -18,19 +18,23 @@ package com.android.internal.policy.impl;
 
 import android.app.AlertDialog;
 import android.app.StatusBarManager;
+import android.app.ActivityManagerNative;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.CustomTheme;
 import android.media.AudioManager;
 import android.os.Handler;
 import android.os.Message;
+import android.os.RemoteException;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -193,7 +197,18 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
      */
     private AlertDialog createDialog() {
 
-        final AlertDialog.Builder ab = new AlertDialog.Builder(mContext);
+        Context context = mContext;
+        try {
+            CustomTheme theme = ActivityManagerNative.getDefault().getConfiguration().customTheme;
+            int styleId = CustomTheme.getStyleId(context, theme.getThemePackageName(), theme.getThemeId());
+            ContextThemeWrapper themeContext = new ContextThemeWrapper(context, styleId);
+            themeContext.useThemedResources(theme.getThemePackageName());
+            context = themeContext;
+        } catch (RemoteException e) {
+            Log.e(TAG, "Failed to get current theme", e);
+        }
+
+        final AlertDialog.Builder ab = new AlertDialog.Builder(context);
 
         ab.setAdapter(mAdapter, this)
                 .setInverseBackgroundForced(true)
