@@ -73,11 +73,14 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
     private boolean mDeviceProvisioned = false;
     private ToggleAction.State mAirplaneState = ToggleAction.State.Off;
 
+    private Context mThemeContext;
+
     /**
      * @param context everything needs a context :(
      */
     public GlobalActions(Context context) {
         mContext = context;
+        mThemeContext = context;
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
         // receive broadcasts
@@ -176,7 +179,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 
                     public void onPress() {
                         // shutdown by making sure radio and power are handled accordingly.
-                        ShutdownThread.shutdownAfterDisablingRadio(mContext, true);
+                        ShutdownThread.shutdownAfterDisablingRadio(mThemeContext, true);
                     }
 
                     public boolean showDuringKeyguard() {
@@ -197,18 +200,17 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
      */
     private AlertDialog createDialog() {
 
-        Context context = mContext;
         try {
             CustomTheme theme = ActivityManagerNative.getDefault().getConfiguration().customTheme;
-            int styleId = CustomTheme.getStyleId(context, theme.getThemePackageName(), theme.getThemeId());
-            ContextThemeWrapper themeContext = new ContextThemeWrapper(context, styleId);
+            int styleId = CustomTheme.getStyleId(mContext, theme.getThemePackageName(), theme.getThemeId());
+            ContextThemeWrapper themeContext = new ContextThemeWrapper(mContext, styleId);
             themeContext.useThemedResources(theme.getThemePackageName());
-            context = themeContext;
+            mThemeContext = themeContext;
         } catch (RemoteException e) {
             Log.e(TAG, "Failed to get current theme", e);
         }
 
-        final AlertDialog.Builder ab = new AlertDialog.Builder(context);
+        final AlertDialog.Builder ab = new AlertDialog.Builder(mThemeContext);
 
         ab.setAdapter(mAdapter, this)
                 .setInverseBackgroundForced(true)
