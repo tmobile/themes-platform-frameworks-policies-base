@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * This code has been modified.  Portions copyright (C) 2010, T-Mobile USA, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +19,20 @@ package com.android.internal.policy.impl;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.StatusBarManager;
-import android.app.ActivityManagerNative;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.CustomTheme;
 import android.media.AudioManager;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
-import android.os.RemoteException;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -80,14 +75,11 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
     private ToggleAction.State mAirplaneState = ToggleAction.State.Off;
     private boolean mIsWaitingForEcmExit = false;
 
-    private Context mThemeContext;
-
     /**
      * @param context everything needs a context :(
      */
     public GlobalActions(Context context) {
         mContext = context;
-        mThemeContext = context;
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
         // receive broadcasts
@@ -112,16 +104,19 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         mDeviceProvisioned = isDeviceProvisioned;
         if (mDialog == null) {
             mStatusBar = (StatusBarManager)mContext.getSystemService(Context.STATUS_BAR_SERVICE);
-            initialize();
+            mDialog = createDialog();
         }
-        mDialog = createDialog();
         prepareDialog();
 
         mStatusBar.disable(StatusBarManager.DISABLE_EXPAND);
         mDialog.show();
     }
 
-    private void initialize() {
+    /**
+     * Create the global actions dialog.
+     * @return A new dialog.
+     */
+    private AlertDialog createDialog() {
         mSilentModeToggle = new ToggleAction(
                 R.drawable.ic_lock_silent_mode,
                 R.drawable.ic_lock_silent_mode_off,
@@ -209,7 +204,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 
                     public void onPress() {
                         // shutdown by making sure radio and power are handled accordingly.
-                        ShutdownThread.shutdown(mThemeContext, true);
+                        ShutdownThread.shutdown(mContext, true);
                     }
 
                     public boolean showDuringKeyguard() {
@@ -222,25 +217,8 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                 });
 
         mAdapter = new MyAdapter();
-    }
 
-    /**
-     * Create the global actions dialog.
-     * @return A new dialog.
-     */
-    private AlertDialog createDialog() {
-
-        try {
-            CustomTheme theme = ActivityManagerNative.getDefault().getConfiguration().customTheme;
-            int styleId = CustomTheme.getStyleId(mContext, theme.getThemePackageName(), theme.getThemeId());
-            ContextThemeWrapper themeContext = new ContextThemeWrapper(mContext, styleId);
-            themeContext.useThemedResources(theme.getThemePackageName());
-            mThemeContext = themeContext;
-        } catch (RemoteException e) {
-            Log.e(TAG, "Failed to get current theme", e);
-        }
-
-        final AlertDialog.Builder ab = new AlertDialog.Builder(mThemeContext);
+        final AlertDialog.Builder ab = new AlertDialog.Builder(mContext);
 
         ab.setAdapter(mAdapter, this)
                 .setInverseBackgroundForced(true)

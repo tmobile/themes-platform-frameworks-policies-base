@@ -55,7 +55,6 @@ import android.util.Config;
 import android.util.EventLog;
 import android.util.Log;
 import android.view.Display;
-import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.IWindowManager;
@@ -839,21 +838,23 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
         
         try {
-        	Context context = mContext;
-        	//Log.i(TAG, "addStartingWindow " + packageName + ": nonLocalizedLabel="
-        	//        + nonLocalizedLabel + " theme=" + Integer.toHexString(theme));
-        	if (theme != 0 || labelRes != 0) {
-        	    try {
-        	        context = context.createPackageContext(packageName, 0);
-        	        if (theme != 0) {
-                            context = new ContextThemeWrapper(context, 0);
-        	            context.setTheme(theme);
-        	        }
-        	    } catch (PackageManager.NameNotFoundException e) {
-                    // Ignore
+            Context context = mContext;
+            boolean setTheme = false;
+            //Log.i(TAG, "addStartingWindow " + packageName + ": nonLocalizedLabel="
+            //        + nonLocalizedLabel + " theme=" + Integer.toHexString(theme));
+            try {
+                context = context.createPackageContext(packageName, 0);
+                if (theme != 0) {
+                    context.setTheme(theme);
+                    setTheme = true;
                 }
-        	}
-        	
+            } catch (PackageManager.NameNotFoundException e) {
+                // Ignore
+            }
+            if (!setTheme) {
+                context.setTheme(com.android.internal.R.style.Theme);
+            }
+            
             Window win = PolicyManager.makeNewWindow(context);
             if (win.getWindowStyle().getBoolean(
                     com.android.internal.R.styleable.Window_windowDisablePreview, false)) {
